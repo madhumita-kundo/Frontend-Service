@@ -13,7 +13,7 @@ pipeline {
 		}
     		stage('test'){
 			steps {
-				echo "test successful"
+				sh 'mvn test'
 				}
 		}
 		stage('package'){
@@ -22,16 +22,40 @@ pipeline {
 				}
 		}
 		stage('publish artifacts to udeploy'){
-			steps {
-        $component_name = 'Frontend Service Component'
-        $version_name = '${component_name}_${Build_Number}'
-				echo "call function udeploy($component_name,$version_name)"
-				}
-		}
-		stage('trigger udeploy'){
-			steps {
-				echo "start deploy process"
-				}
-		}
+			  step([$class: 'UCDeployPublisher',
+        siteName: '35.242.161.163',
+        component: [
+            $class: 'com.urbancode.jenkins.plugins.ucdeploy.VersionHelper$VersionBlock',
+            componentName: 'Frontend Service Component',
+         delivery: [
+                $class: 'com.urbancode.jenkins.plugins.ucdeploy.DeliveryHelper$Push',
+                pushVersion: '$componentName_${BUILD_NUMBER}',
+                baseDir: '\\workspace\\web\\targets',
+                fileIncludePatterns: '*.war',
+                fileExcludePatterns: '',
+                pushProperties: 'jenkins.server=Local\njenkins.reviewed=false',
+                pushDescription: 'Pushed from Jenkins',
+                pushIncremental: false
+            ]
+        ]
+    ])
+}
+		stage('deploy to UcDeploy'){
+			 step([$class: 'UCDeployPublisher',
+        siteName: '35.242.161.163',
+        component: [
+            $class: 'com.urbancode.jenkins.plugins.ucdeploy.VersionHelper$VersionBlock',
+            componentName: 'Frontend Service Component'
+        ],
+        deploy: [
+            $class: 'com.urbancode.jenkins.plugins.ucdeploy.DeployHelper$DeployBlock',
+            deployApp: 'Full Application',
+            deployEnv: 'DEV',
+            deployProc: 'Deploy Jenkins',
+            deployVersions: '${component_name}_${BUILD_NUMBER}',
+            deployOnlyChanged: false
+        ]
+    ])
+}
 	}
 }

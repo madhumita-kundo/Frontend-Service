@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #!/usr/bin/env groovy
 pipeline {
      agent any
@@ -39,3 +40,66 @@ pipeline {
 		}
 	}
 }
+=======
+pipeline {
+   agent any
+	stages {
+		stage('Git Checkout'){
+			steps {
+				git 'https://github.com/madhumita-kundo/Frontend-Service.git'
+				}
+		}
+		stage('compile'){
+			steps {
+				sh 'mvn clean compile'
+				}
+		}
+    		stage('test'){
+			steps {
+				sh 'mvn test'
+				}
+		}
+		stage('package'){
+			steps {
+				sh 'mvn package'
+				}
+		}
+		stage('publish artifacts to udeploy'){
+			  step([$class: 'UCDeployPublisher',
+        siteName: '35.242.161.163',
+        component: [
+            $class: 'com.urbancode.jenkins.plugins.ucdeploy.VersionHelper$VersionBlock',
+            componentName: 'Frontend Service Component',
+         delivery: [
+                $class: 'com.urbancode.jenkins.plugins.ucdeploy.DeliveryHelper$Push',
+                pushVersion: '$componentName_${BUILD_NUMBER}',
+                baseDir: '\\workspace\\web\\targets',
+                fileIncludePatterns: '*.war',
+                fileExcludePatterns: '',
+                pushProperties: 'jenkins.server=Local\njenkins.reviewed=false',
+                pushDescription: 'Pushed from Jenkins',
+                pushIncremental: false
+            ]
+        ]
+    ])
+}
+		stage('deploy to UcDeploy'){
+			 step([$class: 'UCDeployPublisher',
+        siteName: '35.242.161.163',
+        component: [
+            $class: 'com.urbancode.jenkins.plugins.ucdeploy.VersionHelper$VersionBlock',
+            componentName: 'Frontend Service Component'
+        ],
+        deploy: [
+            $class: 'com.urbancode.jenkins.plugins.ucdeploy.DeployHelper$DeployBlock',
+            deployApp: 'Full Application',
+            deployEnv: 'DEV',
+            deployProc: 'Deploy Jenkins',
+            deployVersions: '${component_name}_${BUILD_NUMBER}',
+            deployOnlyChanged: false
+        ]
+    ])
+}
+	}
+}
+>>>>>>> 9f2f8450cfa8e1053d682697a9db376d9a75f061

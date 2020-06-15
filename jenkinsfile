@@ -1,0 +1,37 @@
+pipeline {
+   agent any
+	stages {
+		stage('Git Checkout'){
+			steps {
+				git 'https://github.com/madhumita-kundo/Frontend-Service.git'
+				}
+		}
+		stage('compile'){
+			steps {
+				sh 'mvn clean compile'
+				}
+		}
+    stage('test'){
+			steps {
+				echo "test successful"
+				}
+		}
+		stage('package'){
+			steps {
+				sh 'mvn package'
+				}
+		}
+		stage('publish artifacts to udeploy'){
+			steps {
+        $component_name = 'Frontend Service Component'
+        $version_name = '${component_name}_${Build_Number}'
+				echo "call function udeploy($component_name,$version_name)"
+				}
+		}
+		stage('trigger udeploy'){
+			steps {
+				echo "start deploy process"
+				}
+		}
+	}
+}
